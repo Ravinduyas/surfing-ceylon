@@ -312,34 +312,51 @@ section { padding-inline: var(--pad); position: relative; }
 @media (prefers-reduced-motion: reduce) { .bookable { transition: none; } }
 
 /* =====================================================================
-   Motion: page curtain, hero entrances, scroll reveals, small hovers
+   Motion: hero entrances, scroll reveals, small hovers
    ===================================================================== */
 :root { --ease: cubic-bezier(.2, .7, .2, 1); --snap: cubic-bezier(.7, 0, .2, 1); }
 
-/* red curtain: covers every page load, lifts away, and drops again on the way out */
-body::after {
-  content: "Surfing Ceylon";
-  position: fixed; left: 0; top: 0; width: 100%; height: calc(100% + 34px); z-index: 100; pointer-events: none;
-  display: grid; place-items: center; padding-bottom: 34px;
-  background: var(--red); color: var(--paper);
-  font: 400 clamp(40px, 9vw, 130px)/1 Anton, Impact, sans-serif; text-transform: uppercase; letter-spacing: .03em;
-  /* scalloped bottom edge, like the lip of a wave */
-  -webkit-mask: linear-gradient(#000 0 0) top / 100% calc(100% - 34px) no-repeat, radial-gradient(circle 34px at 34px 0, #000 97%, transparent) bottom / 68px 34px repeat-x;
-          mask: linear-gradient(#000 0 0) top / 100% calc(100% - 34px) no-repeat, radial-gradient(circle 34px at 34px 0, #000 97%, transparent) bottom / 68px 34px repeat-x;
-  animation: curtain-out .8s var(--snap) .4s both;
-}
-html.leaving body::after { animation: curtain-in .42s var(--snap) both; }
-@keyframes curtain-out { to { transform: translateY(-106%); } }
-@keyframes curtain-in { from { transform: translateY(106%); } to { transform: none; } }
-
-/* hero entrances, timed to follow the curtain */
-@keyframes stamp { from { opacity: 0; scale: 1.14; } }
+/* hero entrances */
 @keyframes rise { from { opacity: 0; translate: 0 26px; } }
-@keyframes drop { from { opacity: 0; translate: 0 -70px; rotate: -12deg; } }
-.hero .mega, .page-hero .mega { animation: stamp .7s var(--ease) .75s both; }
-.page-hero .script { animation: rise .6s var(--ease) .7s both; }
-.page-hero .intro, .hero-note { animation: rise .7s var(--ease) 1.05s both; }
-.hero-obj, .board svg { animation: drop .9s var(--ease) .95s both; }
+
+/* ---------- page slide ----------
+   Pages pan sideways like slides. The new page arrives from the right (or from the
+   left when going back to an earlier tab), and the old one leaves the other way.
+   Headline, small text and artwork each travel a different distance, which gives
+   the layered, parallax feel. Classes are set by the inline script in each page's
+   <head> (arriving) and by site.js (leaving). --sx is the direction: 1 right, -1 left. */
+html.enter { --sx: 1; }
+html.enter.from-left { --sx: -1; }
+html.leaving { --sx: -1; }
+html.leaving.to-right { --sx: 1; }
+
+@keyframes pan-in  { from { transform: translateX(calc(var(--sx) * 100vw)); } }
+@keyframes lag-in  { from { translate: calc(var(--sx) * var(--lag)) 0; } }
+@keyframes pan-out { to   { transform: translateX(calc(var(--sx) * 100vw)); } }
+@keyframes lag-out { to   { translate: calc(var(--sx) * var(--lag)) 0; } }
+
+html.enter main > section, html.enter .foot { animation: pan-in 1.05s var(--snap) backwards; }
+html.enter :is(.hero, .page-hero) .mega { --lag: 55vw; animation: lag-in 1.3s var(--snap) backwards; }
+html.enter :is(.page-hero .script, .page-hero .intro, .hero-note) { --lag: 24vw; animation: lag-in 1.2s var(--snap) backwards; }
+html.enter .hero-obj { --lag: 70vw; animation: lag-in 1.45s var(--snap) backwards; }
+html.enter .board svg { --lag: 150vw; animation: lag-in 1.45s var(--snap) backwards; }
+
+html.leaving main > section, html.leaving .foot { animation: pan-out .6s cubic-bezier(.6, 0, .9, .3) forwards; }
+html.leaving :is(.hero, .page-hero) .mega { --lag: 40vw; animation: lag-out .6s cubic-bezier(.6, 0, .9, .3) forwards; }
+html.leaving :is(.hero-obj, .display, .spec, .print) { --lag: 22vw; animation: lag-out .6s cubic-bezier(.6, 0, .9, .3) forwards; }
+html.leaving .board svg { --lag: 150vw; animation: lag-out .6s cubic-bezier(.6, 0, .9, .3) forwards; }
+
+/* page number, bottom right: rolls from the last page's number to this one */
+.pager {
+  position: fixed; right: 22px; bottom: 16px; z-index: 20; pointer-events: none;
+  font: 800 22px/1 Archivo, sans-serif; font-stretch: 125%; letter-spacing: .02em;
+}
+.pager-roll { display: inline-block; height: 1em; overflow: hidden; vertical-align: bottom; }
+.pager-roll i { display: block; font-style: normal; animation: roll-up .9s var(--snap) .3s both; }
+.pager-roll.down i { animation-name: roll-down; }
+@keyframes roll-up { from { translate: 0 0; } to { translate: 0 -1em; } }
+@keyframes roll-down { from { translate: 0 -1em; } to { translate: 0 0; } }
+@media (max-width: 900px) { .pager { font-size: 15px; right: 12px; bottom: 10px; } }
 
 /* scroll reveals (classes are added by site.js, so nothing is hidden without it) */
 .js-anim .reveal {
@@ -372,7 +389,8 @@ html.leaving body::after { animation: curtain-in .42s var(--snap) both; }
 @keyframes fade { from { opacity: 0; } }
 
 @media (prefers-reduced-motion: reduce) {
-  body::after { display: none; }
+  html.enter main > section, html.enter .foot, html.leaving main > section, html.leaving .foot, .pager-roll i,
+  .display, .spec, .print,
   .hero .mega, .page-hero .mega, .page-hero .script, .page-hero .intro, .hero-note, .hero-obj, .board svg,
   .menu.open a, .full[open], .full[open]::backdrop { animation: none; }
   .lineup li > svg, .spot-row .num, .menu a { transition: none; translate: none; rotate: none; }

@@ -163,12 +163,26 @@
   document.body.insertAdjacentHTML('afterbegin', DEFS + CHROME);
   document.body.insertAdjacentHTML('beforeend', FOOTER);
 
-  /* ---------- motion ----------
-     The red curtain that covers each page load is pure CSS (body::after in style.css).
-     Here: (1) drop the curtain again before leaving for another page,
-           (2) reveal blocks as they scroll into view. */
+  /* ---------- motion: reveal blocks as they scroll into view ---------- */
   var root = document.documentElement;
   var calm = window.matchMedia('(prefers-reduced-motion: reduce)').matches;
+
+  /* page slide: the old page pans out, the next one pans in (styles under "page slide" in style.css) */
+  var here = PAGES.map(function (p) { return p.id; }).indexOf(current);
+  var from = -1;
+  try {
+    from = parseInt(sessionStorage.getItem('sc_from'), 10);
+    sessionStorage.removeItem('sc_from');
+    sessionStorage.removeItem('sc_dir');
+  } catch (err) { /* storage unavailable: pages still slide in from the right */ }
+  if (isNaN(from)) from = -1;
+
+  function two(n) { return (n < 10 ? '0' : '') + n; }
+  var back = from > here;
+  var nums = [two(from + 1), two(here + 1)];           // "00" on a first visit
+  if (back) nums.reverse();
+  document.body.insertAdjacentHTML('beforeend',
+    '<div class="pager" aria-hidden="true">*<span class="pager-roll' + (back ? ' down' : '') + '"><i>' + nums[0] + '</i><i>' + nums[1] + '</i></span></div>');
 
   if (!calm) {
     document.addEventListener('click', function (e) {
@@ -176,14 +190,22 @@
       var a = e.target.closest ? e.target.closest('a[href]') : null;
       if (!a || a.target || a.hasAttribute('download')) return;
       var href = a.getAttribute('href');
-      if (!/^[\w-]+\.html$/.test(href)) return;               // only the site's own pages
+      var to = PAGES.map(function (p) { return p.href; }).indexOf(href);
+      if (to < 0) return;                                 // only the site's own pages
       e.preventDefault();
-      if (a.getAttribute('aria-current') === 'page') { window.scrollTo({ top: 0, behavior: 'smooth' }); return; }
+      if (to === here) { window.scrollTo({ top: 0, behavior: 'smooth' }); return; }
+      var goingBack = to < here;
+      try {
+        sessionStorage.setItem('sc_from', here);
+        sessionStorage.setItem('sc_dir', goingBack ? 'left' : 'right');
+      } catch (err) { /* ignore */ }
+      root.classList.remove('enter', 'from-left');
       root.classList.add('leaving');
-      setTimeout(function () { window.location.href = href; }, 430);
+      if (goingBack) root.classList.add('to-right');
+      setTimeout(function () { window.location.href = href; }, 560);
     });
     // coming back with the browser's Back button restores the page as it was left
-    window.addEventListener('pageshow', function (e) { if (e.persisted) root.classList.remove('leaving'); });
+    window.addEventListener('pageshow', function (e) { if (e.persisted) root.classList.remove('leaving', 'to-right'); });
   }
 
   if (!calm && 'IntersectionObserver' in window) {
