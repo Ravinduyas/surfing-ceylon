@@ -20,6 +20,7 @@
   }
 
   var BOARD_PATH = 'M110 6 C166 70 198 210 196 345 C194 480 168 596 142 626 Q110 640 78 626 C52 596 26 480 24 345 C22 210 54 70 110 6Z';
+  var SIDE_PATH = 'M90 8 C107 60 122 170 123 330 C123 480 120 580 113 632 L105 632 C103 560 99 470 99 330 C99 190 99 70 90 8Z';
   var ANTON = 'font-family="Anton, Impact, sans-serif"';
 
   var DEFS = `
@@ -71,6 +72,24 @@
       <circle cx="110" cy="604" r="5" fill="#141210"/>
       <circle cx="110" cy="52" r="15" fill="none" stroke="#b3122b" stroke-width="2.5"/>
       <path d="M100 55 q5 -9 10 0 t10 0" fill="none" stroke="#b3122b" stroke-width="2.5" stroke-linecap="round"/>
+    </symbol>
+
+    <!-- the same board seen from the side: thin, nose kicked up, fins under the tail -->
+    <clipPath id="sideClip"><path d="${SIDE_PATH}"/></clipPath>
+    <symbol id="board-side" viewBox="0 0 220 640">
+      <path d="M120 508 C150 524 168 566 166 608 C152 588 136 574 119 568Z" fill="#141210"/>
+      <path d="M121 452 C138 462 148 484 147 506 C139 494 130 487 120 484Z" fill="#141210"/>
+      <path d="${SIDE_PATH}" fill="url(#resin)"/>
+      <g clip-path="url(#sideClip)">
+        <rect x="0" y="0" width="220" height="100" fill="#f4eedf"/>
+        <rect x="0" y="262" width="220" height="196" fill="#f4eedf"/>
+        <rect x="0" y="270" width="220" height="3" fill="#b3122b"/>
+        <rect x="0" y="447" width="220" height="3" fill="#b3122b"/>
+        <rect x="0" y="556" width="220" height="9" fill="#141210"/>
+        <rect x="0" y="572" width="220" height="4" fill="#141210"/>
+        <rect x="100" y="0" width="5" height="640" fill="#fff" opacity=".3"/>
+        <rect x="116" y="0" width="8" height="640" fill="#000" opacity=".22"/>
+      </g>
     </symbol>
 
     <symbol id="foamie" viewBox="0 0 220 600">
@@ -292,6 +311,144 @@
       if (e.target.hasAttribute('data-close') || e.target === dialog) dialog.close();
     });
   }
+
+  /* ---------- path board (every page except Home) ----------
+     A board rides a curved line down the page as you scroll. It starts in the hero,
+     weaves through the page's sections (passing behind any section marked
+     "over-board"), comes down the right-hand side, then sweeps left, rolls onto
+     its side, grows, and settles level over the closing headline.
+     Each page's line is listed in ROUTES; points are tied to that page's own
+     sections, so the route holds at any screen size. */
+  (function () {
+    var pb = document.getElementById('pathBoard');
+    if (!pb) return;
+    var mainEl = document.querySelector('main');
+    var secs = mainEl.querySelectorAll(':scope > section');
+    var topView = pb.querySelector('.view-top'), sideView = pb.querySelector('.view-side');
+    var wide = window.matchMedia('(min-width: 901px)');
+    var busy = false;
+    var m;                                                    // <main>'s box, refreshed every frame
+
+    // box(i): section i of the page; box(i, sel): something inside it
+    function box(i, sel) {
+      var el = sel ? secs[i].querySelector(sel) : secs[i];
+      var r = el.getBoundingClientRect();
+      return { t: r.top - m.top, h: r.height };
+    }
+    function on(b, x, k, px) { return [x, b.t + b.h * k + (px || 0)]; }   // x across the page, k down the box
+
+    // diagonal, left to right, behind a row of cards
+    function acrossCards(g) {
+      return [on(g, .205, 0, -60), on(g, .27, .15), on(g, .37, .37), on(g, .50, .63),
+              on(g, .63, .77), on(g, .72, .83), on(g, .81, 1), on(g, .855, 1, 50)];
+    }
+    // down the right-hand side of a section
+    function downRight(b) { return [on(b, .882, .22), on(b, .90, .8)]; }
+    // the finish: down the right of the last section, bend, sweep left, end centred
+    function finish(b) {
+      return [on(b, .905, .16), on(b, .903, .52), on(b, .891, .68), on(b, .864, .84),
+              on(b, .81, .91), on(b, .70, .98), on(b, .59, 1), on(b, .50, 1)];
+    }
+
+    var ROUTES = {
+      // hero left > behind the package cards > past the extras > questions
+      packages: { start: .153, line: function () {
+        return acrossCards(box(1, '.pack-grid')).concat(downRight(box(2)), finish(box(3)));
+      } },
+      // hero left > behind the picture > behind the room cards > behind the stats box > food
+      camp: { start: .153, line: function () {
+        var a = box(1);
+        return [on(a, .14, .3), on(a, .17, .85)].concat(acrossCards(box(2, '.pack-grid')), downRight(box(3)), finish(box(4)));
+      } },
+      // hero right > an S through the list of breaks > the season
+      spots: { start: .86, line: function () {
+        var l = box(1);
+        return [on(l, .80, .05), on(l, .55, .2), on(l, .2, .38), on(l, .12, .5),
+                on(l, .2, .62), on(l, .55, .8), on(l, .84, .97)].concat(finish(box(2)));
+      } },
+      // hero right > swings left into the gap beside the message form > back right underneath it >
+      // down behind the "by bus" card > sweeps left under the travel cards
+      contact: { start: .84, line: function () {
+        var h = box(0), a = box(1), g = box(2), c = box(2, '.pack-grid');
+        return [on(h, .75, .89),
+                on(a, .628, .15), on(a, .582, .40), on(a, .576, .63), on(a, .621, .85), on(a, .681, .98), on(a, .76, 1, 20),
+                on(c, .846, 0, -135), on(c, .905, 0, -30),
+                on(c, .892, .32), on(c, .846, 1), on(c, .793, 1, 45),          // the last bend
+                on(g, .694, 1, -8), on(g, .59, 1), on(g, .50, 1)];
+      } }
+    };
+    var plan = ROUTES[current];
+    if (!plan) return;
+
+    function route() {
+      m = mainEl.getBoundingClientRect();
+      var W = m.width;
+      var raw = [[plan.start, window.innerHeight * .07 + pb.offsetHeight / 2]].concat(plan.line());
+      var pts = [], len = 0;
+      raw.forEach(function (p, i) {
+        var pt = { x: p[0] * W, y: p[1], u: 0 };
+        if (i) {
+          var q = pts[i - 1], dx = (pt.x - q.x) * .5, dy = pt.y - q.y;   // sideways counts half, so the board keeps pace with the scroll
+          len += Math.sqrt(dx * dx + dy * dy);
+          pt.u = len;
+        }
+        pts.push(pt);
+      });
+      return { pts: pts, len: len };
+    }
+
+    function at(r, u) {
+      var p = r.pts;
+      if (u <= 0) return p[0];
+      if (u >= r.len) return p[p.length - 1];
+      for (var i = 1; i < p.length; i++) {
+        if (u <= p[i].u) {
+          var k = (u - p[i - 1].u) / (p[i].u - p[i - 1].u || 1);
+          return { x: p[i - 1].x + (p[i].x - p[i - 1].x) * k, y: p[i - 1].y + (p[i].y - p[i - 1].y) * k };
+        }
+      }
+      return p[p.length - 1];
+    }
+    function unit(v) { return v < 0 ? 0 : v > 1 ? 1 : v; }
+    function smooth(v) { v = unit(v); return v * v * (3 - 2 * v); }
+
+    function place() {
+      busy = false;
+      if (!wide.matches) { pb.style.transform = topView.style.cssText = sideView.style.cssText = ''; return; }   // phones keep a small static board
+      var r = route(), p = r.pts, n = p.length;
+      var max = document.documentElement.scrollHeight - window.innerHeight;
+      var u = (max > 0 ? unit(window.scrollY / max) : 0) * r.len;
+      var c = at(r, u), a = at(r, u - 90), b = at(r, u + 90);
+      var turn = -Math.atan2(b.x - a.x, b.y - a.y) * 180 / Math.PI;   // tail-first, following the line
+
+      // from the last bend to the end of the line the board grows steadily,
+      // finishing 65% of the page width long (END_LENGTH), level and centred
+      var END_LENGTH = .65;
+      var bend = p[n - 6].u;
+      var grow = unit((u - bend) / (r.len - bend));
+      var biggest = Math.max(1, mainEl.offsetWidth * END_LENGTH / pb.offsetHeight);
+      var size = 1 + (biggest - 1) * smooth(grow);
+      turn += (90 - turn) * smooth((grow - .5) / .5);
+
+      pb.style.transform = 'translate3d(' + (c.x - pb.offsetWidth / 2) + 'px,' + (c.y - pb.offsetHeight / 2) + 'px,0) rotate(' + turn + 'deg) scale(' + size + ')';
+
+      // after the last bend the board rolls onto its rail: the top view narrows away
+      // while the side view (thin profile, fins down) comes in
+      var roll = smooth((u - bend) / (p[n - 2].u - bend));
+      topView.style.transform = 'scaleX(' + (1 - .86 * roll) + ')';
+      topView.style.opacity = 1 - unit((roll - .55) / .4);
+      sideView.style.transform = 'scaleX(' + (2.4 - 1.4 * roll) + ')';
+      sideView.style.opacity = unit((roll - .3) / .55);
+    }
+    function ask() { if (!busy) { busy = true; requestAnimationFrame(place); } }
+
+    window.addEventListener('scroll', ask, { passive: true });
+    window.addEventListener('resize', ask);
+    window.addEventListener('load', ask);
+    document.addEventListener('toggle', ask, true);               // opening a question changes the page height
+    if (document.fonts && document.fonts.ready) document.fonts.ready.then(ask);
+    place();
+  })();
 
   /* ---------- travelling board (home page only) ----------
      Stateless: every frame derives the board's place from the scroll position.

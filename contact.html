@@ -20,6 +20,8 @@
 <body data-page="contact">
 
 <main>
+  <!-- board that rides a curved path down the page as you scroll (see "path board" in js/site.js) -->
+  <div class="hero-obj obj-board path-board desk-only" id="pathBoard" aria-hidden="true"><svg class="view-top" viewBox="0 0 220 640"><use href="#board"/></svg><svg class="view-side" viewBox="0 0 220 640"><use href="#board-side"/></svg></div>
   <section class="page-hero">
     <p class="script">We reply between sessions</p>
     <h1 class="mega red rough">Say Hello</h1>
@@ -27,7 +29,7 @@
     <svg class="hero-obj obj-coconut left" viewBox="0 0 300 380" aria-hidden="true"><use href="#coconut"/></svg>
   </section>
 
-  <section class="band split start">
+  <section class="band over-board split start">
     <div class="copy">
       <p class="script">Find us</p>
       <h2 class="display rough">Surfing<br>Ceylon</h2>
@@ -64,7 +66,7 @@
     </form>
   </section>
 
-  <section class="band">
+  <section class="band over-board">
     <div class="section-head">
       <p class="script">From Colombo to the bay</p>
       <h2 class="display rough">Getting here</h2>
@@ -98,6 +100,11 @@
         </ul>
       </article>
     </div>
+  </section>
+
+  <section class="book">
+    <p class="script">Board waxed, kettle on.</p>
+    <h2 class="mega red rough">See you soon</h2>
   </section>
 </main>
 

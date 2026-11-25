@@ -20,6 +20,8 @@
 <body data-page="camp">
 
 <main>
+  <!-- board that rides a curved path down the page as you scroll (see "path board" in js/site.js) -->
+  <div class="hero-obj obj-board flip path-board desk-only" id="pathBoard" aria-hidden="true"><svg class="view-top" viewBox="0 0 220 640"><use href="#board"/></svg><svg class="view-side" viewBox="0 0 220 640"><use href="#board-side"/></svg></div>
   <section class="page-hero">
     <p class="script">Two minutes from the sand</p>
     <h1 class="mega red rough">The Camp</h1>
@@ -27,7 +29,7 @@
     <svg class="hero-obj obj-coconut" viewBox="0 0 300 380" aria-hidden="true"><use href="#coconut"/></svg>
   </section>
 
-  <section class="band split">
+  <section class="band over-board split">
     <figure class="print wide-print">
       <svg viewBox="0 0 400 250" role="img" aria-label="Linocut of a sunset over a rolling wave"><use href="#linocut"/></svg>
       <figcaption class="script">The view from the gate, more or less</figcaption>
@@ -40,7 +42,7 @@
     </div>
   </section>
 
-  <section class="band">
+  <section class="band over-board">
     <div class="section-head">
       <p class="script">Where you sleep</p>
       <h2 class="display rough">The rooms</h2>
@@ -76,7 +78,7 @@
     </div>
   </section>
 
-  <section class="band split">
+  <section class="band over-board split">
     <div class="copy">
       <p class="script">Every day, more or less</p>
       <h2 class="display rough">A day at camp</h2>
@@ -109,7 +111,7 @@
     </div>
   </section>
 
-  <section class="band food">
+  <section class="band over-board food">
     <h2 class="mega mid red rough">Rice &amp; Curry</h2>
     <div class="split start">
       <p class="lead">Lunch is the main event. Rice, dhal, three or four vegetable curries, coconut sambol, and fish when the boats come in. It is cooked in the house kitchen every day and eaten with your hands if you want to do it properly.</p>

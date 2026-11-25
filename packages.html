@@ -20,14 +20,15 @@
 <body data-page="packages">
 
 <main>
+  <!-- board that rides a curved path down the page as you scroll (see "path board" in js/site.js) -->
+  <div class="hero-obj obj-board flip path-board" id="pathBoard" aria-hidden="true"><svg class="view-top" viewBox="0 0 220 640"><use href="#board"/></svg><svg class="view-side" viewBox="0 0 220 640"><use href="#board-side"/></svg></div>
   <section class="page-hero">
     <p class="script">Season: November to April</p>
     <h1 class="mega red rough">Packages</h1>
     <p class="intro">Three ways to stay. Each one covers your bed, your board, your coaching and most of your meals, so the only thing left to decide is which wave.</p>
-    <div class="hero-obj obj-board flip" aria-hidden="true"><svg viewBox="0 0 220 640"><use href="#board"/></svg></div>
   </section>
 
-  <section class="band">
+  <section class="band over-board">
     <div class="pack-grid">
       <article class="spec pack">
         <h3>The Dip</h3>

@@ -8,13 +8,14 @@
 }
 
 * { box-sizing: border-box; margin: 0; }
-html { scroll-behavior: smooth; }
+html { scroll-behavior: smooth; overflow-x: hidden; overflow-x: clip; }
 body {
   background: var(--paper);
   color: var(--ink);
   font: 400 17px/1.45 "Barlow Semi Condensed", "Arial Narrow", sans-serif;
   padding-left: var(--rail);
-  overflow-x: hidden;
+  overflow-x: hidden;   /* older browsers */
+  overflow-x: clip;     /* nothing may widen the page: no sideways scroll, no zoomed-out phone view */
 }
 /* paper grain */
 body::before {
@@ -101,7 +102,7 @@ a { color: inherit; }
 .board svg { width: 100%; height: 100%; display: block; }
 
 /* ---------- layout ---------- */
-main { position: relative; }
+main { position: relative; overflow-x: clip; }   /* keeps the travelling board and sliding sections inside the page */
 section { padding-inline: var(--pad); position: relative; }
 .tri { display: grid; grid-template-columns: minmax(0, 1fr) var(--gap) minmax(0, 1fr); align-items: center; }
 
@@ -235,7 +236,7 @@ section { padding-inline: var(--pad); position: relative; }
 .page-hero .script { margin-bottom: 6px; }
 .page-hero .intro { max-width: 540px; margin: 3.5vh auto 0; font-size: 19px; line-height: 1.4; }
 .hero-obj { position: absolute; z-index: 3; pointer-events: none; }
-.obj-board { right: 7%; top: 7vh; height: min(58vh, 520px); aspect-ratio: 220 / 640; transform: rotate(15deg);
+.obj-board { right: 7%; top: 7vh; height: min(58vh, 520px, 34vw); aspect-ratio: 220 / 640; transform: rotate(15deg);
   filter: drop-shadow(30px 24px 30px rgba(150, 20, 28, .34)) drop-shadow(6px 4px 6px rgba(20, 18, 16, .25)); }
 .obj-board.flip { right: auto; left: 7%; transform: rotate(-15deg); }
 .obj-board svg { width: 100%; height: 100%; display: block; }
@@ -345,6 +346,17 @@ html.leaving main > section, html.leaving .foot { animation: pan-out .6s cubic-b
 html.leaving :is(.hero, .page-hero) .mega { --lag: 40vw; animation: lag-out .6s cubic-bezier(.6, 0, .9, .3) forwards; }
 html.leaving :is(.hero-obj, .display, .spec, .print) { --lag: 22vw; animation: lag-out .6s cubic-bezier(.6, 0, .9, .3) forwards; }
 html.leaving .board svg { --lag: 150vw; animation: lag-out .6s cubic-bezier(.6, 0, .9, .3) forwards; }
+
+/* path board (Packages page): site.js moves it along a curve as the page scrolls.
+   It sits above the page but below the package cards, so it slides behind them. */
+@media (min-width: 901px) {
+  .obj-board.path-board { left: 0; top: 0; right: auto; z-index: 1; transform-origin: 50% 50%; will-change: transform; }
+  .over-board { z-index: 2; }
+  .over-board .spec:not(.featured) { background: var(--paper); }
+}
+html.enter .path-board, html.leaving .path-board { --lag: 150vw; }
+@media (max-width: 900px) { .path-board.desk-only { display: none; } }   /* pages whose phone header already has the coconut */
+.path-board .view-side { position: absolute; inset: 0; opacity: 0; }   /* side profile, faded in by site.js after the last bend */
 
 /* page number, bottom right: rolls from the last page's number to this one */
 .pager {

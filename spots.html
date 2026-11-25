@@ -20,14 +20,15 @@
 <body data-page="spots">
 
 <main>
+  <!-- board that rides a curved path down the page as you scroll (see "path board" in js/site.js) -->
+  <div class="hero-obj obj-board path-board" id="pathBoard" aria-hidden="true"><svg class="view-top" viewBox="0 0 220 640"><use href="#board"/></svg><svg class="view-side" viewBox="0 0 220 640"><use href="#board-side"/></svg></div>
   <section class="page-hero">
     <p class="script">Six waves within an hour of camp</p>
     <h1 class="mega red rough">The Breaks</h1>
     <p class="intro">The south coast packs sand-bottom beach breaks and coral reefs into one short stretch of road. We check the charts each evening and pick the wave that suits your level and the tide.</p>
-    <div class="hero-obj obj-board" aria-hidden="true"><svg viewBox="0 0 220 640"><use href="#board"/></svg></div>
   </section>
 
-  <section class="band">
+  <section class="band over-board">
     <ol class="spot-list">
       <li class="spot-row">
         <span class="num rough">01</span>
@@ -110,7 +111,7 @@
     </ol>
   </section>
 
-  <section class="band split">
+  <section class="band over-board split">
     <div class="copy">
       <p class="script">When to come</p>
       <h2 class="display rough">The season</h2>
